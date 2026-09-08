@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佐野駅 電光掲示板</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+<div class="board">
+
+    <header class="station-header">
+        <h1>両毛線佐野駅時刻表</h1>
+        <div class="station-en">Ryomo Line Sano Station Timetable</div>
+    </header>
+
+    {% for platform in [1, 2] %}
+
+    <section class="platform" data-platform="{{ platform }}">
+
+        <div class="platform-header">
+
+            <div class="platform-number">
+                {{ platform }}
+            </div>
+
+            <div class="yellow-bar"></div>
+
+            <div class="direction">
+
+                <div class="direction-jp">
+                    <span class="line-name">両毛線</span>
+
+                    {% if platform == 1 %}
+                    <span>足利・桐生・高崎方面</span>
+                    {% else %}
+                    <span>栃木・小山方面</span>
+                    {% endif %}
+                </div>
+
+                <div class="direction-en">
+                    <span>Ryomo Line</span>
+
+                    {% if platform == 1 %}
+                    <span>for Ashikaga, Kiryu &amp; Takasaki</span>
+                    {% else %}
+                    <span>for Tochigi &amp; Oyama</span>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="train-table">
+
+            <div class="table-head">
+                <div>種別</div>
+                <div>発車時刻</div>
+                <div>行先</div>
+                <div>両数</div>
+                <div>発車まで</div>
+            </div>
+
+            <div class="trains" id="trains-{{ platform }}"></div>
+
+        </div>
+
+    </section>
+
+    {% endfor %}
+
+
+    <footer class="footer">
+
+        <div id="today"></div>
+
+        <div id="clock"></div>
+
+        <button onclick="location.reload()">
+            <span class="refresh-icon">↻</span>
+            更新
+        </button>
+
+    </footer>
+
+</div>
+
+
+<script>
+
+const trains = {{ trains | tojson }};
+
+
+const destinationEnglish = {
+    "小山": "Oyama",
+    "桐生": "Kiryu",
+    "高崎": "Takasaki",
+    "足利": "Ashikaga",
+    "栃木": "Tochigi"
+};
+
+
+/* ========================================
+   各ホームの最終列車時刻
+   ======================================== */
+
+function getLastTrainTime(platformNumber) {
+
+    const platformTrains = trains
+        .filter(t => t.platform === platformNumber)
+        .sort((a, b) => a.time.localeCompare(b.time));
+
+    if (platformTrains.length === 0) {
+        return null;
+    }
+
+    return platformTrains[platformTrains.length - 1].time;
+}
+
+
+/* ========================================
+   終電後かどうかを判定
+   ======================================== */
+
+function isServiceFinished(platformNumber) {
+
+    const now = new Date();
+
+    const hour = now.getHours();
+
+    const currentTime =
+        String(hour).padStart(2, "0") +
+        ":" +
+        String(now.getMinutes()).padStart(2, "0");
+
+
+    /*
+     * 0:00～3:59
+     * → 列車情報を表示しない
+     */
+
+    if (hour < 4) {
+        return true;
+    }
+
+
+    /*
+     * そのホームの最終列車時刻を取得
+     */
+
+    const lastTrainTime =
+        getLastTrainTime(platformNumber);
+
+
+    /*
+     * 最終列車を過ぎたら終了
+     */
+
+    if (
+        lastTrainTime &&
+        currentTime > lastTrainTime
+    ) {
+        return true;
+    }
+
+
+    return false;
+}
+
+
+/* ========================================
+   次の列車を取得
+   ======================================== */
+
+function getUpcoming(platformNumber) {
+
+    const now = new Date();
+
+    const midnight = new Date(now);
+
+    midnight.setHours(0, 0, 0, 0);
+
+
+    const candidates = trains
+
+        .filter(
+            t => t.platform === platformNumber
+        )
+
+        .map(t => {
+
+            const [h, m] =
+                t.time.split(":").map(Number);
+
+
+            const departure =
+                new Date(midnight);
+
+
+            departure.setHours(
+                h,
+                m,
+                0,
+                0
+            );
+
+
+            /*
+             * 今日の列車を過ぎた場合、
+             * 翌日の列車として扱う
+             */
+
+            if (departure <= now) {
+
+                departure.setDate(
+                    departure.getDate() + 1
+                );
+            }
+
+
+            return {
+                ...t,
+                departure
+            };
+
+        })
+
+        .sort(
+            (a, b) =>
+                a.departure - b.departure
+        );
+
+
+    return candidates.slice(0, 2);
+}
+
+
+/* ========================================
+   発車までの時間
+   ======================================== */
+
+function remainingMinutes(departure) {
+
+    const diff =
+        departure - new Date();
+
+
+    return Math.max(
+        0,
+        Math.ceil(diff / 60000)
+    );
+}
+
+
+/* ========================================
+   列車情報HTML
+   ======================================== */
+
+function trainHTML(train, isFirst) {
+
+    const carClass =
+        train.cars === 4
+            ? "cars-green"
+            : "cars-orange";
+
+
+    /*
+     * 備考欄
+     *
+     * 最初の列車だけ備考を表示。
+     * 備考がなくても空欄を表示。
+     */
+
+    const note = isFirst
+        ? (
+            train.note
+                ? `<div class="note">${train.note}</div>`
+                : `<div class="note empty-note"></div>`
+          )
+        : "";
+
+
+    return `
+
+        <div class="train-row">
+
+            <div class="train-type">
+
+                <div class="local-box">
+
+                    <strong>普通</strong>
+
+                    <span>Local</span>
+
+                </div>
+
+            </div>
+
+
+            <div class="departure-time">
+
+                ${train.time}
+
+            </div>
+
+
+            <div class="destination">
+
+                <strong>
+                    ${train.destination}
+                </strong>
+
+                <span>
+                    ${destinationEnglish[train.destination] || ""}
+                </span>
+
+            </div>
+
+
+            <div class="cars">
+
+                <div class="car-badge ${carClass}">
+
+                    <strong>
+                        ${train.cars}
+                    </strong>
+
+                    <span>両</span>
+
+                </div>
+
+            </div>
+
+
+            <div class="remaining">
+
+                <strong>
+                    ${remainingMinutes(train.departure)}
+                </strong>
+
+                <span>
+                    分後
+                </span>
+
+            </div>
+
+        </div>
+
+
+        ${note}
+
+    `;
+}
+
+
+/* ========================================
+   列車終了表示
+   ======================================== */
+
+function serviceFinishedHTML() {
+
+    return `
+
+        <div class="service-finished">
+
+            本日の列車は終了しました。
+
+        </div>
+
+    `;
+}
+
+
+/* ========================================
+   掲示板を更新
+   ======================================== */
+
+function updateBoard() {
+
+    [1, 2].forEach(platform => {
+
+
+        const container =
+            document.getElementById(
+                `trains-${platform}`
+            );
+
+
+        /*
+         * 終電後・深夜0～4時
+         */
+
+        if (
+            isServiceFinished(platform)
+        ) {
+
+            container.innerHTML =
+                serviceFinishedHTML();
+
+            return;
+        }
+
+
+        /*
+         * 通常の列車表示
+         */
+
+        const list =
+            getUpcoming(platform);
+
+
+        container.innerHTML =
+            list
+                .map(
+                    (train, index) =>
+                        trainHTML(
+                            train,
+                            index === 0
+                        )
+                )
+                .join("");
+
+    });
+
+
+    /* ========================================
+       日付
+       ======================================== */
+
+    const now = new Date();
+
+
+    document.getElementById(
+        "today"
+    ).textContent =
+
+        `${now.getFullYear()}年` +
+        `${now.getMonth() + 1}月` +
+        `${now.getDate()}日` +
+        `（${"日月火水木金土"[now.getDay()]}）`;
+
+
+    /* ========================================
+       現在時刻
+       ======================================== */
+
+    document.getElementById(
+        "clock"
+    ).textContent =
+
+        now.toLocaleTimeString(
+            "ja-JP",
+            {
+                hour12: false
+            }
+        );
+
+}
+
+
+/* ========================================
+   最初に実行
+   ======================================== */
+
+updateBoard();
+
+
+/* ========================================
+   1秒ごとに更新
+   ======================================== */
+
+setInterval(
+    updateBoard,
+    1000
+);
+
+</script>
+
+</body>
+</html>

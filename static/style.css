@@ -1,0 +1,369 @@
+```css
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    background: #101010;
+    color: #fff;
+    font-family: Arial, "Noto Sans JP", "Yu Gothic", sans-serif;
+}
+
+body {
+    padding: 20px;
+}
+
+/* ===== 全体 ===== */
+.board {
+    width: min(540px, 100%);
+    margin: 0 auto;
+}
+
+/* ===== 駅名 ===== */
+.station-header {
+    border: 1px solid #fff;
+    border-radius: 8px;
+    text-align: center;
+    padding: 14px 22px 10px;
+    margin-bottom: 10px;
+}
+
+.station-header h1 {
+    margin: 0;
+    font-size: 38px;
+    line-height: 0.95;
+}
+
+.station-en {
+    margin-top: 0;
+    font-size: 17px;
+    letter-spacing: 2px;
+}
+
+/* ===== ホーム ===== */
+.platform {
+    border: 1px solid #fff;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 9px 0 11px;
+    overflow: hidden;
+}
+
+.platform-header {
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    border-bottom: 1px solid #fff;
+    padding-bottom: 6px;
+    justify-content: flex-start;
+}
+
+/* ===== ホーム番号 ===== */
+.platform-number {
+    width: 48px;
+    flex-shrink: 0;
+    font-size: 46px;
+    line-height: 1;
+    font-weight: 800;
+    text-align: center;
+    padding-left: 7px;
+}
+
+/* ===== 黄色の縦線 ===== */
+.yellow-bar {
+    width: 8px;
+    height: 42px;
+    background: #ffe600;
+    margin: 0 22px 0 4px;
+    flex-shrink: 0;
+}
+
+/* ===== 方面表示 ===== */
+.direction {
+    text-align: left;
+}
+
+.direction-jp {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    column-gap: 12px;
+    font-size: 27px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.line-name {
+    font-size: 27px;
+}
+
+.direction-en {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    column-gap: 12px;
+    margin-top: 3px;
+    font-size: 13px;
+    font-weight: 700;
+    padding-left: 0;
+    line-height: 1;
+}
+
+/* ===== 発車案内 ===== */
+.train-table {
+    width: 100%;
+}
+
+/* 列幅:
+   種別 105px
+   発車時刻 125px
+   行先 100px
+   両数 75px
+   発車まで 110px
+*/
+.table-head,
+.train-row {
+    display: grid;
+    grid-template-columns:
+        105px
+        125px
+        100px
+        75px
+        110px;
+    justify-content: start;
+    align-items: center;
+    text-align: center;
+}
+
+.table-head {
+    height: 30px;
+    border-bottom: none;
+    font-size: 13px;
+    font-weight: 300;
+}
+
+.train-row {
+    min-height: 60px;
+    border-bottom: none;
+}
+
+.table-head > div,
+.train-row > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===== 種別 ===== */
+.local-box {
+    width: 64px;
+    min-height: 38px;
+    background: #fff;
+    color: #000;
+    border: 2px solid #fff;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    line-height: 1;
+}
+
+.local-box strong {
+    font-size: 17px;
+    line-height: 18px;
+}
+
+.local-box span {
+    margin-top: 0;
+    font-size: 9px;
+    line-height: 10px;
+    font-weight: 700;
+}
+
+/* ===== 発車時刻 ===== */
+.departure-time {
+    font-size: 29px;
+    font-weight: 800;
+}
+
+/* ===== 行先 ===== */
+.destination {
+    flex-direction: column;
+    line-height: 1;
+}
+
+.destination strong {
+    font-size: 24px;
+}
+
+.destination span {
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* ===== 両数 ===== */
+.cars strong,
+.remaining strong {
+    font-size: 31px;
+    font-weight: 900;
+}
+
+.car-badge {
+    min-width: 52px;
+    width: 52px;
+    height: 40px;
+    padding: 0 4px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: #fff;
+}
+
+.car-badge strong {
+    color: #fff;
+    line-height: 1;
+}
+
+.car-badge span {
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ===== 残り時間 ===== */
+.remaining span {
+    margin-left: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    align-self: flex-end;
+    margin-bottom: 8px;
+}
+
+/* ===== 両数カラー ===== */
+.cars-green {
+    background: #00b83f;
+}
+
+.cars-orange {
+    background: #f28c00;
+}
+
+
+/* ===== 備考 ===== */
+.note {
+    min-height: 14px;
+    height: 14px;
+    border-bottom: 1px solid #888;
+    padding: 1px 6px 1px;
+    text-align: left;
+    font-size: 8px;
+    font-weight: 700;
+}
+
+/* 備考が空でも常に表示 */
+.empty-note {
+    min-height: 14px;
+    height: 14px;
+    padding: 1px 6px 1px;
+    border-bottom: 1px solid #888;
+}
+
+/* ===== 下部：日付・時刻・更新 ===== */
+.footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
+    align-items: stretch;
+}
+
+.footer > div,
+.footer button {
+    height: 36px;
+    min-height: 36px;
+    border: 1px solid #fff;
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.footer button {
+    cursor: pointer;
+    gap: 6px;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.refresh-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* ===== スマートフォン ===== */
+@media (max-width: 800px) {
+    body {
+        padding: 8px;
+    }
+
+    .board {
+        width: 100%;
+    }
+
+    .direction-jp {
+        font-size: 18px;
+        gap: 10px;
+    }
+
+    .direction-en {
+        font-size: 10px;
+        gap: 10px;
+        margin-top: 3px;
+    }
+
+    .table-head,
+    .train-row {
+        grid-template-columns:
+            85px
+            105px
+            88px
+            72px
+            95px;
+        justify-content: start;
+    }
+
+    .departure-time {
+        font-size: 23px;
+    }
+
+    .destination strong {
+        font-size: 20px;
+    }
+
+    .car-badge {
+        min-width: 52px;
+        width: 52px;
+    }
+}
+
+/* ===== 本日の列車終了 ===== */
+.service-finished {
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+}
